@@ -4,9 +4,18 @@ app = Flask(__name__)
 import ConfigParser
 import urllib
 from readability.readability import Document
+import xml.etree.ElementTree as ET
 
 config = ConfigParser.RawConfigParser()
 config.read('betterrs.cfg')
+
+content_tags = ['description', 'summary', 'content']#, 'content:encoded']
+
+ET.register_namespace('content', 'http://purl.org/rss/1.0/modules/content/')
+ET.register_namespace('itunes', 'http://www.itunes.com/dtds/podcast-1.0.dtd')
+ET.register_namespace('dc', 'http://purl.org/dc/elements/1.1/')
+ET.register_namespace('taxo', 'http://purl.org/rss/1.0/modules/taxonomy/')
+ET.register_namespace('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
 
 feeds = []
 for section in config.sections():
@@ -32,8 +41,18 @@ def hello():
 @app.route('/feed/<feed_name>')
 def deliver(feed_name):
     feed = getFeedByName(feed_name)
-    feed['content'] = urllib.urlopen(feed['url']).read()
-    return feed['content']
+    feedTree = ET.fromstring(
+                    urllib.urlopen(feed['url']).read() )
+    
+    for item in feedTree.findall('channel/item'):
+        for tag in content_tags:
+           if item.find(tag) != None:
+               item.remove(item.find(tag))
+        html = urllib.urlopen(item.find('link').text).read()
+        description = ET.SubElement(item, 'description')
+        description.text = Document(html).summary()
+    
+    return ET.tostring(feedTree)
 
 if __name__ == '__main__':
     app.debug = True
