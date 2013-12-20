@@ -1,0 +1,10 @@
+<title>feeds</title>
+<ul>
+{% for feed in feeds %}
+  <li>
+  	<a href="feed/{{ feed.name }}">{{ feed.name }}</a>
+  	<br>
+  	feed: <a href="{{ feed.url }}">{{ feed.url }}</a>
+  </li>
+{% endfor %}
+</ul>
