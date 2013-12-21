@@ -84,7 +84,10 @@ def deliver(feed_name):
         content = feedTree.new_tag('content')
         item.append(description)
         item.append(content)
-        description.append(unicode(differentiate(html)))
+        differentiated = differentiate(html)
+        # remove title if in payload
+        [x.extract() for x in differentiated.find_all(text=item.find('title').string)]
+        description.append(unicode(differentiated))
         
     return unicode(feedTree.prettify())
 
