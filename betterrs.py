@@ -5,8 +5,7 @@ import os, sys
 from hashlib import md5
 import ConfigParser
 import urllib
-from readability.readability import Document
-import xml.etree.ElementTree as ET
+from bs4 import BeautifulSoup
 
 config = ConfigParser.RawConfigParser()
 config.read('betterrs.cfg')
@@ -15,13 +14,7 @@ tmp_folder = config.get('GLOBAL', 'tmp_folder')
 if not os.path.isdir(tmp_folder):
     sys.exit('tmp_folder: %s does not exist' % tmp_folder)
 
-content_tags = ['description', 'summary', 'content']#, 'content:encoded']
-
-ET.register_namespace('content', 'http://purl.org/rss/1.0/modules/content/')
-ET.register_namespace('itunes', 'http://www.itunes.com/dtds/podcast-1.0.dtd')
-ET.register_namespace('dc', 'http://purl.org/dc/elements/1.1/')
-ET.register_namespace('taxo', 'http://purl.org/rss/1.0/modules/taxonomy/')
-ET.register_namespace('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
+content_tags = ['description', 'summary', 'content', 'content:encoded']
 
 feeds = []
 for section in config.sections():
@@ -53,6 +46,26 @@ def getHTML(url):
         f.write(html)
         return html
 
+def differentiate(html, clean=False):
+    rdiv = {'counter': 0,
+            'div': None}
+    soup = BeautifulSoup(html)
+    for div in soup.find_all('div'):
+        counter = 0
+        if div.string:
+            counter += len(div.string)
+        for p in div.find_all('p', recursive=False):
+            counter += len(p.get_text(strip=True))
+        if rdiv['counter'] < counter:
+            rdiv['counter'] = counter
+            rdiv['div'] = div
+    if clean:
+        for element in rdiv['div'].findAll():
+            if element.name not in allowedTags:
+                print "stripping: %s" % element.name
+                element.extract()
+    return rdiv['div']
+
 @app.route('/')
 def hello():
     return render_template('index.html', feeds=feeds)
@@ -60,18 +73,20 @@ def hello():
 @app.route('/feed/<feed_name>')
 def deliver(feed_name):
     feed = getFeedByName(feed_name)
-    feedTree = ET.fromstring(
-                    urllib.urlopen(feed['url']).read() )
+    feedTree = BeautifulSoup(
+                    urllib.urlopen(feed['url']).read(), 'xml' )
     
-    for item in feedTree.findall('channel/item'):
-        for tag in content_tags:
-           if item.find(tag) != None:
-               item.remove(item.find(tag))
-        html = getHTML(item.find('link').text)
-        description = ET.SubElement(item, 'description')
-        description.text = Document(html).summary()
-    
-    return ET.tostring(feedTree)
+    for item in feedTree.find_all(['item', 'entry']):
+        # remove content from feed
+        [x.extract() for x in item.find_all(content_tags)]
+        html = getHTML(item.find('link').string)
+        description = feedTree.new_tag('description')
+        content = feedTree.new_tag('content')
+        item.append(description)
+        item.append(content)
+        description.append(unicode(differentiate(html)))
+        
+    return unicode(feedTree.prettify())
 
 if __name__ == '__main__':
     app.debug = True
