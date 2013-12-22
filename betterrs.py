@@ -71,28 +71,46 @@ def cachedDifferentiate(url, clean=False):
         return differentiated
 
 @app.route('/')
-def hello():
+def index():
     return render_template('index.html', feeds=feeds)
 
 @app.route('/feed/<feed_name>')
 def deliver(feed_name):
     feed = getFeedByName(feed_name)
-    feedTree = BeautifulSoup(
-                    urllib.urlopen(feed['url']).read(), 'xml' )
+    feedTree = BeautifulSoup( getHTML(feed['url']), 'xml' )
+    type = False
     
     for item in feedTree.find_all(['item', 'entry']):
+        if item.name == 'item':
+            type = 'rss'
+        if item.name == 'entry':
+            type = 'atom'
         # remove content from feed
         [x.extract() for x in item.find_all(content_tags)]
-        description = feedTree.new_tag('description')
-        content = feedTree.new_tag('content')
-        item.append(description)
-        item.append(content)
-        differentiated = cachedDifferentiate(item.find('link').string)
-        # remove title if in payload
-        [x.extract() for x in differentiated.find_all(text=item.find('title').string)]
-        description.append(unicode(differentiated))
         
-    return unicode(feedTree.prettify())
+        article_link = item.find('link').string
+        if not article_link:
+            article_link = item.find('link').get('href')
+        if article_link:
+            differentiated = cachedDifferentiate(article_link)
+            # remove title if in payload
+            [x.extract() for x in differentiated.find_all(text=item.find('title').string)]
+        else:
+            raise Exception('article link not found in feed %s: %s' % (feed_name, feed['url']))
+        
+        if type == 'rss':
+            description = feedTree.new_tag('description')
+            item.append(description)
+            description.append(unicode(differentiated))
+        
+        if type == 'atom':
+            content = feedTree.new_tag('content')
+            item.append(content)
+            content.append(unicode(differentiated))
+            
+    if type == 'atom':
+        feedTree.find('feed').attrs['xmlns'] = 'http://www.w3.org/2005/Atom'
+    return unicode(feedTree)
 
 if __name__ == '__main__':
     app.debug = True
