@@ -1,10 +1,19 @@
-<title>feeds</title>
-<ul>
-{% for feed in feeds %}
-  <li>
-  	<a href="feed/{{ feed.name }}">{{ feed.name }}</a>
-  	<br>
-  	feed: <a href="{{ feed.url }}">{{ feed.url }}</a>
-  </li>
-{% endfor %}
-</ul>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>feeds - betterrs</title>
+    </head>
+    <body>
+        <h1>Feeds:</h1>
+        <ul>
+        {% for feed in feeds %}
+            <li>
+                <a href="feed/{{ feed.name }}">{{ feed.name }}</a>
+                <br>
+                feed: <a href="{{ feed.url }}">{{ feed.url }}</a>
+                </li>
+        {% endfor %}
+        </ul>
+        powered by <a href="https://github.com/liob/betterrs">betterrs</a>
+    </body>
+</html>
