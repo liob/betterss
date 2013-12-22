@@ -14,7 +14,7 @@ tmp_folder = config.get('GLOBAL', 'tmp_folder')
 if not os.path.isdir(tmp_folder):
     sys.exit('tmp_folder: %s does not exist' % tmp_folder)
 
-content_tags = ['description', 'summary', 'content', 'content:encoded']
+content_tags = ['description', 'summary', 'content', 'encoded']
 
 feeds = []
 for section in config.sections():
@@ -36,15 +36,7 @@ def getFeedByName(name):
         return None
 
 def getHTML(url):
-    tmpfile = os.path.join(tmp_folder, md5(url).hexdigest())
-    try:
-        f = open(tmpfile, 'r')
-        return f.read()
-    except:
-        html = urllib.urlopen(url).read()
-        f = open(tmpfile, 'w')
-        f.write(html)
-        return html
+    return urllib.urlopen(url).read()
 
 def differentiate(html, clean=False):
     rdiv = {'counter': 0,
@@ -66,6 +58,18 @@ def differentiate(html, clean=False):
                 element.extract()
     return rdiv['div']
 
+def cachedDifferentiate(url, clean=False):
+    tmpfile = os.path.join(tmp_folder, md5(url).hexdigest())
+    try:
+        f = open(tmpfile, 'r')
+        return BeautifulSoup(f, 'xml' )
+    except:
+        html = getHTML(url)
+        differentiated = differentiate(html, clean)
+        f = open(tmpfile, 'w')
+        f.write(unicode(differentiated).encode("utf8"))
+        return differentiated
+
 @app.route('/')
 def hello():
     return render_template('index.html', feeds=feeds)
@@ -79,12 +83,11 @@ def deliver(feed_name):
     for item in feedTree.find_all(['item', 'entry']):
         # remove content from feed
         [x.extract() for x in item.find_all(content_tags)]
-        html = getHTML(item.find('link').string)
         description = feedTree.new_tag('description')
         content = feedTree.new_tag('content')
         item.append(description)
         item.append(content)
-        differentiated = differentiate(html)
+        differentiated = cachedDifferentiate(item.find('link').string)
         # remove title if in payload
         [x.extract() for x in differentiated.find_all(text=item.find('title').string)]
         description.append(unicode(differentiated))
