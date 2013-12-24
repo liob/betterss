@@ -1,14 +1,18 @@
 betterrs
 ========
 betterrs is a rss proxy. It tries to integrate linked articles
-directly into the rss feed. My motivation to create betterrs is to read
-the whole article in my feed aggregator.
+directly into the rss feed. My motivation is to create betterrs is to 
+read the whole article in my feed aggregator.
+
+betterrs supports rss and atom feeds.
+
 
 Requirements:
 -------------
 * Python
 * [Flask]
 * [BeautifulSoup] 4
+
 
 Installation:
 -------------
@@ -32,8 +36,10 @@ Installation:
 
     - open http://127.0.0.1:5000 with a web browser
 
+
 ### WSGI
 todo
+
 
 [Flask]: http://flask.pocoo.org/
 [BeautifulSoup]: http://www.crummy.com/software/BeautifulSoup/
