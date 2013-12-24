@@ -14,6 +14,13 @@ tmp_folder = config.get('GLOBAL', 'tmp_folder')
 if not os.path.isdir(tmp_folder):
     sys.exit('tmp_folder: %s does not exist' % tmp_folder)
 
+try:
+    debug = config.getboolean('GLOBAL', 'debug')
+    if debug:
+        app.debug = True
+except ConfigParser.NoOptionError:
+    debug = False
+
 content_tags = ['description', 'summary', 'content', 'encoded']
 
 feeds = []
@@ -27,6 +34,10 @@ for section in config.sections():
         feeds.append(feed)
     except:
         pass
+    try:
+        feed['clean'] = config.getboolean(section, 'clean')
+    except ConfigParser.NoOptionError:
+        feed['clean'] = True
 
 def getFeedByName(name):
     feedlst = [feed for feed in feeds if feed['name'] == name]
@@ -92,7 +103,7 @@ def deliver(feed_name):
         if not article_link:
             article_link = item.find('link').get('href')
         if article_link:
-            differentiated = cachedDifferentiate(article_link)
+            differentiated = cachedDifferentiate(article_link, feed['clean'])
             # remove title if in payload
             [x.extract() for x in differentiated.find_all(text=item.find('title').string)]
         else:
