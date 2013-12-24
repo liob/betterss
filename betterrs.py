@@ -22,6 +22,10 @@ except ConfigParser.NoOptionError:
     debug = False
 
 content_tags = ['description', 'summary', 'content', 'encoded']
+allowed_tags = ['br', 'p', 'a', 'img', 'li', 'em', 'ul', 'span',
+                'h1', 'h2', 'h3', 'h4', 'h5',
+                'div', 'strong', 'i',
+                'table', 'td', 'tr']
 
 feeds = []
 for section in config.sections():
@@ -47,6 +51,8 @@ def getFeedByName(name):
         return None
 
 def getHTML(url):
+    if debug:
+        print 'getting url: %s' % url
     return urllib.urlopen(url).read()
 
 def differentiate(html, clean=False):
@@ -64,8 +70,9 @@ def differentiate(html, clean=False):
             rdiv['div'] = div
     if clean:
         for element in rdiv['div'].findAll():
-            if element.name not in allowedTags:
-                print "stripping: %s" % element.name
+            if element.name not in allowed_tags:
+                if debug:
+                    print "stripping: %s" % element.name
                 element.extract()
     return rdiv['div']
 
