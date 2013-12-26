@@ -1,10 +1,10 @@
-betterrs
+betterss
 ========
-betterrs is a rss proxy. It tries to integrate linked articles
-directly into the rss feed. My motivation is to create betterrs is to 
+betterss is a rss proxy. It tries to integrate linked articles
+directly into the rss feed. My motivation is to create betterss is to 
 read the whole article in my feed aggregator.
 
-betterrs supports rss and atom feeds.
+betterss supports rss and atom feeds.
 
 
 Requirements:
@@ -23,16 +23,16 @@ Installation:
 
 * clone Git repo
 
-        git clone https://github.com/liob/betterrs.git
+        git clone https://github.com/liob/betterss.git
 
-* configure betterrs
+* configure betterss
 
-        cp betterrs-template.cfg betterrs.cfg
-        vi betterrs.cfg
+        cp betterss-template.cfg betterss.cfg
+        vi betterss.cfg
 
-* test betterrs
+* test betterss
 
-        python betterrs.py
+        python betterss.py
 
     - open http://127.0.0.1:5000 with a web browser
 
