@@ -8,7 +8,7 @@ import urllib
 from bs4 import BeautifulSoup
 
 config = ConfigParser.RawConfigParser()
-config.read('betterrs.cfg')
+config.read('betterss.cfg')
 
 tmp_folder = config.get('GLOBAL', 'tmp_folder')
 if not os.path.isdir(tmp_folder):
