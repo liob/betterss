@@ -14,7 +14,9 @@ config.read(configPath)
 
 tmp_folder = config.get('GLOBAL', 'tmp_folder')
 if not os.path.isdir(tmp_folder):
-    sys.exit('tmp_folder: %s does not exist' % tmp_folder)
+    os.makedirs(tmp_folder)
+    if not os.path.isdir(tmp_folder):
+        sys.exit('tmp_folder: %s does not exist' % tmp_folder)
 
 try:
     debug = config.getboolean('GLOBAL', 'debug')
